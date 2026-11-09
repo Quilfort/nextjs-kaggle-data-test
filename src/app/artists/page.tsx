@@ -1,42 +1,11 @@
-import { Music2, Search, Users } from "lucide-react";
+import { Music2, Users } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 
-import {
-  SpotifyArtistsTable,
-  type ArtistStats,
-} from "@/components/dashboard/spotify-artists-table";
+import { SpotifyArtistSearch } from "@/components/dashboard/spotify-artist-search";
+import { SpotifyArtistsTable } from "@/components/dashboard/spotify-artists-table";
 
-import { getSpotify2023Tracks } from "@/lib/data/spotify-2023-reader";
-import { getSpotify2024Tracks } from "@/lib/data/spotify-2024-reader";
-
-function normalizeArtistName(name: string): string {
-  return name.trim().toLowerCase();
-}
-
-function parseStreams(value: number | string | null | undefined): number {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : 0;
-  }
-
-  if (typeof value === "string") {
-    const parsed = Number(value.replace(/,/g, "").trim());
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  return 0;
-}
-
-function splitArtists(value: string | null | undefined): string[] {
-  if (!value) {
-    return [];
-  }
-
-  return value
-    .split(",")
-    .map((artist) => artist.trim())
-    .filter(Boolean);
-}
+import { getAllArtists, getTopArtists } from "@/lib/data/spotify-artists";
 
 function formatStreams(value: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -45,79 +14,9 @@ function formatStreams(value: number): string {
   }).format(value);
 }
 
-function getTopArtists(): ArtistStats[] {
-  const tracks2023 = getSpotify2023Tracks();
-  const tracks2024 = getSpotify2024Tracks();
-
-  const artists = new Map<string, ArtistStats>();
-
-  function getOrCreateArtist(name: string): ArtistStats | undefined {
-    const cleanName = name.trim();
-
-    if (!cleanName) {
-      return undefined;
-    }
-
-    const key = normalizeArtistName(cleanName);
-    const existing = artists.get(key);
-
-    if (existing) {
-      return existing;
-    }
-
-    const artist: ArtistStats = {
-      name: cleanName,
-      streams2023: 0,
-      streams2024: 0,
-      total: 0,
-    };
-
-    artists.set(key, artist);
-
-    return artist;
-  }
-
-  // Spotify 2023: split comma-separated artist names.
-  for (const track of tracks2023) {
-    const streams = parseStreams(track.streams);
-    const trackArtists = splitArtists(track.artistName);
-
-    for (const artistName of trackArtists) {
-      const artist = getOrCreateArtist(artistName);
-
-      if (artist) {
-        artist.streams2023 += streams;
-      }
-    }
-  }
-
-  // Spotify 2024: only use the artist field.
-  for (const track of tracks2024) {
-    const streams = parseStreams(track.spotifyStreams);
-    const trackArtists = splitArtists(track.artist);
-
-    for (const artistName of trackArtists) {
-      const artist = getOrCreateArtist(artistName);
-
-      if (artist) {
-        artist.streams2024 += streams;
-      }
-    }
-  }
-
-  return Array.from(artists.values())
-    .map((artist) => ({
-      ...artist,
-      total: artist.streams2023 + artist.streams2024,
-    }))
-    .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name))
-    .slice(0, 25);
-}
-
 export default function ArtistsPage() {
-  const topArtists = getTopArtists();
-
-  const totalArtists = topArtists.length;
+  const allArtists = getAllArtists();
+  const topArtists = getTopArtists(25);
 
   const combinedStreams = topArtists.reduce(
     (total, artist) => total + artist.total,
@@ -126,7 +25,6 @@ export default function ArtistsPage() {
 
   return (
     <main className="min-w-0 flex-1 space-y-8 p-6 lg:p-8">
-      {/* Page heading */}
       <section className="space-y-2">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="size-4" />
@@ -143,17 +41,8 @@ export default function ArtistsPage() {
         </div>
       </section>
 
-      {/* Search bar - functionality will be added later */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-
-        <div
-          className="flex h-12 items-center rounded-xl border border-border/60 bg-card pl-11 pr-4 text-sm text-muted-foreground"
-          aria-label="Search artists"
-        >
-          Search artists...
-        </div>
-      </div>
+      {/* Artist search */}
+      <SpotifyArtistSearch artists={allArtists.map((artist) => artist.name)} />
 
       {/* Overview */}
       <section className="grid gap-4 sm:grid-cols-2">
@@ -164,12 +53,10 @@ export default function ArtistsPage() {
             </div>
 
             <div>
-              <p className="text-sm text-muted-foreground">
-                Artists in ranking
-              </p>
+              <p className="text-sm text-muted-foreground">Total artists</p>
 
               <p className="text-2xl font-semibold tabular-nums">
-                {totalArtists}
+                {allArtists.length.toLocaleString("en-US")}
               </p>
             </div>
           </CardContent>
@@ -197,7 +84,6 @@ export default function ArtistsPage() {
         </Card>
       </section>
 
-      {/* Artists table */}
       <SpotifyArtistsTable artists={topArtists} />
     </main>
   );

@@ -1,13 +1,7 @@
 import { ArrowUpDown, Music2 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
-
-export type ArtistStats = {
-  name: string;
-  streams2023: number;
-  streams2024: number;
-  total: number;
-};
+import type { ArtistStats } from "@/lib/data/spotify-artists";
 
 type SpotifyArtistsTableProps = {
   artists: ArtistStats[];
@@ -48,13 +42,9 @@ export function SpotifyArtistsTable({ artists }: SpotifyArtistsTableProps) {
             <thead>
               <tr className="border-b border-border/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="w-16 px-5 py-4 text-right font-medium">#</th>
-
                 <th className="px-5 py-4 font-medium">Name</th>
-
                 <th className="px-5 py-4 text-right font-medium">2023</th>
-
                 <th className="px-5 py-4 text-right font-medium">2024</th>
-
                 <th className="bg-primary/[0.04] px-5 py-4 text-right font-semibold text-foreground">
                   Total
                 </th>
@@ -76,7 +66,6 @@ export function SpotifyArtistsTable({ artists }: SpotifyArtistsTableProps) {
                       <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                         <Music2 className="size-4" />
                       </div>
-
                       <span className="font-medium">{artist.name}</span>
                     </div>
                   </td>
