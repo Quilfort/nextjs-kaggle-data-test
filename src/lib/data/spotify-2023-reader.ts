@@ -46,7 +46,6 @@ function parseNumber(value: string | undefined): number | null {
     return null;
   }
 
-  // Remove thousands separators before converting.
   const normalizedValue = value.trim().replace(/,/g, "");
   const parsedValue = Number(normalizedValue);
 
@@ -95,6 +94,58 @@ function mapRecord(record: CsvRecord): SpotifyTrack2023 {
   };
 }
 
+function normalizeForComparison(value: string | null): string {
+  return (value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function getTrackKey(track: SpotifyTrack2023): string {
+  return `${normalizeForComparison(track.trackName)}::${normalizeForComparison(track.artistName)}`;
+}
+
+function getCompletenessScore(track: SpotifyTrack2023): number {
+  return Object.values(track).filter((value) => value !== null).length;
+}
+
+function shouldReplaceTrack(
+  existingTrack: SpotifyTrack2023,
+  candidateTrack: SpotifyTrack2023,
+): boolean {
+  const existingStreams = existingTrack.streams ?? -1;
+  const candidateStreams = candidateTrack.streams ?? -1;
+
+  if (candidateStreams !== existingStreams) {
+    return candidateStreams > existingStreams;
+  }
+
+  return (
+    getCompletenessScore(candidateTrack) > getCompletenessScore(existingTrack)
+  );
+}
+
+function removeDuplicateTracks(tracks: SpotifyTrack2023[]): SpotifyTrack2023[] {
+  const uniqueTracks = new Map<string, SpotifyTrack2023>();
+
+  for (const track of tracks) {
+    if (!track.trackName || !track.artistName) {
+      continue;
+    }
+
+    const key = getTrackKey(track);
+    const existingTrack = uniqueTracks.get(key);
+
+    if (!existingTrack) {
+      uniqueTracks.set(key, track);
+      continue;
+    }
+
+    if (shouldReplaceTrack(existingTrack, track)) {
+      uniqueTracks.set(key, track);
+    }
+  }
+
+  return Array.from(uniqueTracks.values());
+}
+
 export function getSpotify2023Tracks(): SpotifyTrack2023[] {
   let csvContent: string;
 
@@ -127,5 +178,7 @@ export function getSpotify2023Tracks(): SpotifyTrack2023[] {
     );
   }
 
-  return records.map(mapRecord);
+  const tracks = records.map(mapRecord);
+
+  return removeDuplicateTracks(tracks);
 }

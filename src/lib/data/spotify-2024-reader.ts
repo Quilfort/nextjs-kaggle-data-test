@@ -115,6 +115,71 @@ function mapRecord(record: CsvRecord): SpotifyTrack2024 {
   };
 }
 
+function normalizeForComparison(value: string | null): string {
+  return (value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function getTrackKey(track: SpotifyTrack2024): string {
+  const normalizedTrackName = normalizeForComparison(track.trackName);
+  const normalizedArtist = normalizeForComparison(track.artist);
+
+  return `${normalizedTrackName}::${normalizedArtist}`;
+}
+
+function getCompletenessScore(track: SpotifyTrack2024): number {
+  return Object.values(track).filter((value) => value !== null).length;
+}
+
+function shouldReplaceTrack(
+  existingTrack: SpotifyTrack2024,
+  candidateTrack: SpotifyTrack2024,
+): boolean {
+  const existingStreams = existingTrack.spotifyStreams ?? -1;
+  const candidateStreams = candidateTrack.spotifyStreams ?? -1;
+
+  // Prefer the track with the highest Spotify stream count.
+  if (candidateStreams !== existingStreams) {
+    return candidateStreams > existingStreams;
+  }
+
+  // If streams are equal, prefer the record with the most available data.
+  return (
+    getCompletenessScore(candidateTrack) > getCompletenessScore(existingTrack)
+  );
+}
+
+function removeDuplicateTracks(tracks: SpotifyTrack2024[]): SpotifyTrack2024[] {
+  const uniqueTracks = new Map<string, SpotifyTrack2024>();
+
+  for (const track of tracks) {
+    // Ignore records without a usable track name or artist.
+    if (!track.trackName || !track.artist) {
+      continue;
+    }
+
+    // Exclude the previously identified xSyborg records.
+    const artists = track.artist.split(",").map(normalizeForComparison);
+
+    if (artists.includes("xsyborg")) {
+      continue;
+    }
+
+    const key = getTrackKey(track);
+    const existingTrack = uniqueTracks.get(key);
+
+    if (!existingTrack) {
+      uniqueTracks.set(key, track);
+      continue;
+    }
+
+    if (shouldReplaceTrack(existingTrack, track)) {
+      uniqueTracks.set(key, track);
+    }
+  }
+
+  return Array.from(uniqueTracks.values());
+}
+
 export function getSpotify2024Tracks(): SpotifyTrack2024[] {
   let csvContent: string;
 
@@ -147,5 +212,8 @@ export function getSpotify2024Tracks(): SpotifyTrack2024[] {
     );
   }
 
-  return records.map(mapRecord);
+  const tracks = records.map(mapRecord);
+
+  // Clean the dataset before returning it to the dashboard.
+  return removeDuplicateTracks(tracks);
 }
