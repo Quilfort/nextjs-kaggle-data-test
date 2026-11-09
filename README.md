@@ -14,7 +14,21 @@ https://ui.shadcn.com/docs
 
 https://ui.shadcn.com/docs/installation/next
 
-## Data Sets
+## Add Components
+
+With shadcn, you can add the components you want to use.
+
+```sh
+npx shadcn@latest add [Components]
+```
+
+### Example
+
+```sh
+npx shadcn@latest add sidebar breadcrumb separator
+```
+
+# Data Sets
 
 Most Streamed Spotify Songs 2023
 https://www.kaggle.com/datasets/nelgiriyewithana/top-spotify-songs-2023
