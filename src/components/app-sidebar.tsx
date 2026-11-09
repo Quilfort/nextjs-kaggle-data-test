@@ -25,14 +25,19 @@ const navigationItems = [
     icon: Home,
   },
   {
-    title: "Spotify 2023",
+    title: "2023",
     url: "/2023",
     icon: CalendarDays,
   },
   {
-    title: "Spotify 2024",
+    title: "2024",
     url: "/2024",
     icon: CalendarDays,
+  },
+  {
+    title: "Artists",
+    url: "/artists",
+    icon: Music2,
   },
 ];
 

@@ -16,6 +16,7 @@ const pageTitles: Record<string, string> = {
   "/": "Home",
   "/2023": "Spotify 2023",
   "/2024": "Spotify 2024",
+  "/Artists": "Artists",
 };
 
 export function AppHeader() {

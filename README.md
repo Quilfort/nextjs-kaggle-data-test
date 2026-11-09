@@ -1,4 +1,4 @@
-# Test
+# Spotify Stats with Kaggle and shadcn
 
 ## CSV Parsing
 
@@ -28,10 +28,17 @@ npx shadcn@latest add [Components]
 npx shadcn@latest add sidebar breadcrumb separator
 ```
 
+
+
+
+
+
 # Data Sets
 
 Most Streamed Spotify Songs 2023
-https://www.kaggle.com/datasets/nelgiriyewithana/top-spotify-songs-2023
+
+- https://www.kaggle.com/datasets/nelgiriyewithana/top-spotify-songs-2023
 
 Most Streamed Spotify Songs 2024
-https://www.kaggle.com/datasets/nelgiriyewithana/most-streamed-spotify-songs-2024
+
+- https://www.kaggle.com/datasets/nelgiriyewithana/most-streamed-spotify-songs-2024
